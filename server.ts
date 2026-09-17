@@ -255,7 +255,7 @@ Return JSON:
         source: 'demo_fallback',
         subject: `Operational dispatch efficiency for ${company?.company}`,
         body: `Hi ${decisionMaker?.name?.split(' ')[0] || 'there'},\n\nI noticed ${company?.company}'s operational growth across ${company?.location}.\n\nWould you be open to a 10-minute briefing on how multi-depot carriers are reducing dock turnaround times?\n\nBest regards,\nAlex Mercer`,
-        label: 'Prepared by AI Staff',
+        label: 'Prepared by Staff Member',
       });
     }
   });
