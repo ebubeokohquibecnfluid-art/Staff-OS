@@ -1,0 +1,6 @@
+{
+  "name": "Staff OS",
+  "description": "Operating system for AI staff that actually work. Plan, execute, qualify, and prepare business tasks while humans stay in control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
