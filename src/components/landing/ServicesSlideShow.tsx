@@ -11,7 +11,7 @@ import {
   Building2,
   FileText,
   Activity,
-  Sparkles,
+  Terminal,
 } from 'lucide-react';
 import { ViewScreen } from '../../types';
 
@@ -290,7 +290,7 @@ export const ServicesSlideShow: React.FC<ServicesSlideShowProps> = ({
                 {/* THE HIGHLIGHTED ONE-LINER DESCRIPTION */}
                 <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/90 shadow-inner relative">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase font-mono text-emerald-400 font-semibold mb-1.5">
-                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    <Terminal className="w-3 h-3 text-emerald-400" />
                     <span>One-Liner Service Directive</span>
                   </div>
                   <p className="text-sm sm:text-base font-semibold text-slate-100 leading-snug">

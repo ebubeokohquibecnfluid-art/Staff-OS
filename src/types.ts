@@ -29,6 +29,9 @@ export interface Worker {
   targetCriteria: TargetCriteria;
   currentTaskId?: string;
   currentActionSummary?: string;
+  initials?: string;
+  capabilities?: string[];
+  completedAssignmentsCount?: number;
   stats: {
     prospectsResearched: number;
     qualifiedProspects: number;
@@ -44,7 +47,8 @@ export interface Worker {
 export interface WorkerTask {
   id: string;
   workerId: string;
-  type:
+  workerName?: string;
+  type?:
     | 'create_plan'
     | 'research_prospects'
     | 'evaluate_prospects'
@@ -58,8 +62,9 @@ export interface WorkerTask {
   toolUsed?: string;
   input?: Record<string, unknown>;
   result?: Record<string, unknown>;
-  retryCount: number;
-  createdAt: string;
+  retryCount?: number;
+  createdAt?: string;
+  startedAt?: string;
   completedAt?: string;
   errorMessage?: string;
 }
@@ -67,6 +72,7 @@ export interface WorkerTask {
 export interface WorkerAction {
   id: string;
   workerId: string;
+  workerName?: string;
   taskId?: string;
   actionType: 'worker_action' | 'research' | 'approval' | 'error';
   status: 'in_progress' | 'completed' | 'retrying' | 'failed';
@@ -91,6 +97,11 @@ export interface DecisionMaker {
 
 export interface Prospect {
   id: string;
+  workerId?: string;
+  workerName?: string;
+  recordType?: 'prospect' | 'carrier' | 'hub_dispatch' | 'compliance_audit' | 'support_ticket';
+  actionRequired?: string;
+  riskLevel?: 'Low' | 'Medium' | 'High';
   company: string;
   website: string;
   industry: string;
@@ -119,6 +130,7 @@ export interface Prospect {
 export interface WorkerRun {
   id: string;
   workerId: string;
+  workerName?: string;
   goal: string;
   status: WorkerStatus;
   startedAt: string;
@@ -132,14 +144,20 @@ export interface WorkerRun {
   approvalsRequired: number;
   errorsCount: number;
   retryCount: number;
+  deliverablesSummary?: string;
+  nextSteps?: string;
 }
 
 export type ViewScreen =
   | 'landing'
+  | 'quickstart'
   | 'dashboard'
   | 'workers'
   | 'workspace'
+  | 'tasks'
   | 'prospects'
+  | 'approvals'
   | 'activity'
+  | 'results'
   | 'settings'
   | 'create_worker';

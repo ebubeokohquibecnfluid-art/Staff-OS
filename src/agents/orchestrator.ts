@@ -1,7 +1,7 @@
 import { Prospect, TargetCriteria, Worker, WorkerAction, WorkerRun, WorkerStatus, WorkerTask } from '../types';
 import { workerToolProvider } from '../tools/workerTools';
 import { aiService } from '../services/aiService';
-import { INITIAL_COMPLETED_RUN } from '../data/seedData';
+import { INITIAL_COMPLETED_RUN, INITIAL_TASKS } from '../data/seedData';
 
 export type ExecutionSpeed = 'realtime' | 'accelerated' | 'instant';
 
@@ -55,10 +55,72 @@ export class WorkerOrchestrator {
     const worker: Worker = {
       ...currentWorker,
       status: 'PLANNING',
-      currentActionSummary: 'Interpreting business goal and formulating research plan...',
+      currentActionSummary: 'Interpreting directive and synthesizing multi-stage work plan...',
       updatedAt: new Date().toISOString(),
     };
     callbacks.onWorkerUpdate(worker);
+
+    // Build worker-tailored tasks
+    const tasks: WorkerTask[] = [
+      {
+        id: `tsk-plan-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: 'Formulate Sequential Execution Plan',
+        description: `Decompose directive "${worker.goal}" into bounded stages and tool calls`,
+        status: 'in_progress',
+        toolUsed: 'createWorkerPlan()',
+        input: { goal: worker.goal, targetCriteria: worker.targetCriteria },
+        startedAt: new Date().toISOString(),
+      },
+      {
+        id: `tsk-research-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: 'Discover & Ingest Domain Records',
+        description: `Search verified registries for ${worker.targetCriteria.industry} in ${worker.targetCriteria.location}`,
+        status: 'pending',
+        toolUsed: 'researchCompanies()',
+      },
+      {
+        id: `tsk-qualify-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: 'Evaluate Fit Against Qualification Signals',
+        description: 'Score operations size, telemetry health, and operational compatibility',
+        status: 'pending',
+        toolUsed: 'analyzeFit()',
+      },
+      {
+        id: `tsk-contact-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: `Verify ${worker.targetCriteria.targetTitle} Authority`,
+        description: 'Identify verified decision maker leadership profiles and authority credentials',
+        status: 'pending',
+        toolUsed: 'findDecisionMaker()',
+      },
+      {
+        id: `tsk-draft-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: 'Prepare Actionable Operational Deliverables',
+        description: 'Synthesize structured drafts with specific commercial and logistical hooks',
+        status: 'pending',
+        toolUsed: 'generateOutreach()',
+      },
+      {
+        id: `tsk-approve-${Date.now()}`,
+        workerId: worker.id,
+        workerName: worker.name,
+        title: 'Human-in-the-Loop Supervisor Sign-off',
+        description: 'Hold all external dispatches in staging until supervisor approves or edits',
+        status: 'pending',
+        type: 'human_approval',
+      },
+    ];
+
+    callbacks.onTasksUpdate([...tasks]);
 
     // Helper to log action
     const logAction = (
@@ -96,13 +158,13 @@ export class WorkerOrchestrator {
       // -------------------------------------------------------------
       // STAGE 1: PLAN (GOAL RECEIVED -> CREATE PLAN)
       // -------------------------------------------------------------
-      updateStatus('PLANNING', 'Interpreting goal & formulating research plan');
+      updateStatus('PLANNING', 'Interpreting directive & formulating work plan');
       callbacks.onActiveToolChange?.({
         name: 'createWorkerPlan()',
         input: { goal: worker.goal, criteria: worker.targetCriteria },
       });
 
-      logAction('worker_action', 'Goal received', `Targeting ${worker.targetCriteria.industry} in ${worker.targetCriteria.location}`);
+      logAction('worker_action', 'Operational directive ingested', `Targeting ${worker.targetCriteria.industry} in ${worker.targetCriteria.location}`);
       await this.sleep(1200);
 
       // Call AI Service or deterministic plan
@@ -113,22 +175,29 @@ export class WorkerOrchestrator {
         output: planRes.plan,
       });
 
-      logAction('worker_action', 'Research plan created', '6 logical execution stages defined', 'createWorkerPlan()');
+      tasks[0].status = 'completed';
+      tasks[0].completedAt = new Date().toISOString();
+      tasks[0].result = { stages: 6, estimatedDuration: '18s' };
+      tasks[1].status = 'in_progress';
+      tasks[1].startedAt = new Date().toISOString();
+      callbacks.onTasksUpdate([...tasks]);
+
+      logAction('worker_action', 'Execution plan synthesized', '6 logical execution stages defined', 'createWorkerPlan()');
       await this.sleep(1000);
 
       // -------------------------------------------------------------
-      // STAGE 2: RESEARCH COMPANIES (DISCOVERY)
+      // STAGE 2: RESEARCH / DISCOVERY
       // -------------------------------------------------------------
-      updateStatus('RESEARCHING', 'Searching for companies matching target ICP criteria');
+      updateStatus('RESEARCHING', `Scanning database for ${worker.targetCriteria.industry}`);
       callbacks.onActiveToolChange?.({
         name: 'researchCompanies()',
         input: { criteria: worker.targetCriteria },
       });
 
-      logAction('research', 'Searching for companies', `Scanning company intelligence for ${worker.targetCriteria.industry}`, 'researchCompanies()');
+      logAction('research', 'Discovering operational records', `Scanning database registries for ${worker.targetCriteria.industry}`, 'researchCompanies()');
       await this.sleep(1400);
 
-      // Optional Simulated Error & Retry demonstration (Section 18 of prompt)
+      // Optional Simulated Error & Retry demonstration
       if (this.simulateErrorAndRetry) {
         errorsCount++;
         retryCount++;
@@ -149,68 +218,100 @@ export class WorkerOrchestrator {
 
       worker.stats.prospectsResearched = 32;
       callbacks.onWorkerUpdate({ ...worker });
-      logAction('research', '32 potential companies discovered', 'Identified regional logistics carriers spanning Midwest, South-Central, and Southeast', 'researchCompanies()');
+
+      tasks[1].status = 'completed';
+      tasks[1].completedAt = new Date().toISOString();
+      tasks[1].result = { discoveredCount: 32, matchedRegion: worker.targetCriteria.location };
+      tasks[2].status = 'in_progress';
+      tasks[2].startedAt = new Date().toISOString();
+      callbacks.onTasksUpdate([...tasks]);
+
+      logAction('research', '32 potential entities discovered', `Identified records matching ${worker.targetCriteria.industry} criteria`, 'researchCompanies()');
       await this.sleep(1400);
 
       // -------------------------------------------------------------
-      // STAGE 3: QUALIFY COMPANIES (FIT EVALUATION)
+      // STAGE 3: QUALIFY
       // -------------------------------------------------------------
-      updateStatus('QUALIFYING', 'Evaluating companies against target criteria & operational signals');
+      updateStatus('QUALIFYING', 'Evaluating entities against operational qualification signals');
       callbacks.onActiveToolChange?.({
         name: 'analyzeFit()',
         input: { totalCandidates: 32, criteria: worker.targetCriteria },
       });
 
-      logAction('research', 'Evaluating companies against target criteria', 'Scoring operational expansion, fleet complexity, and facility count', 'analyzeFit()');
+      logAction('research', 'Evaluating qualification signals', 'Scoring operational expansion, fleet complexity, and safety metrics', 'analyzeFit()');
       await this.sleep(1600);
 
       worker.stats.qualifiedProspects = 14;
       callbacks.onWorkerUpdate({ ...worker });
-      logAction('research', '14 companies qualified', '18 companies filtered out (size mismatch or low operational complexity)', 'analyzeFit()');
+
+      tasks[2].status = 'completed';
+      tasks[2].completedAt = new Date().toISOString();
+      tasks[2].result = { qualifiedCount: 14, rejectedCount: 18, benchmarkScore: '85/100' };
+      tasks[3].status = 'in_progress';
+      tasks[3].startedAt = new Date().toISOString();
+      callbacks.onTasksUpdate([...tasks]);
+
+      logAction('research', '14 entities qualified', '18 records filtered out (size mismatch or low operational complexity)', 'analyzeFit()');
       await this.sleep(1200);
 
       // -------------------------------------------------------------
-      // STAGE 4: DECISION MAKER RESEARCH
+      // STAGE 4: CONTACT & AUTHORITY RESEARCH
       // -------------------------------------------------------------
-      updateStatus('CONTACT_RESEARCH', 'Researching operational decision makers at qualified accounts');
+      updateStatus('CONTACT_RESEARCH', `Verifying ${worker.targetCriteria.targetTitle} leadership profiles`);
       callbacks.onActiveToolChange?.({
         name: 'findDecisionMaker()',
         input: { targetTitle: worker.targetCriteria.targetTitle, count: 14 },
       });
 
-      logAction('research', 'Researching decision makers', `Locating verified ${worker.targetCriteria.targetTitle} and Operations VP profiles`, 'findDecisionMaker()');
+      logAction('research', 'Researching decision makers', `Locating verified ${worker.targetCriteria.targetTitle} profiles`, 'findDecisionMaker()');
       await this.sleep(1800);
 
       worker.stats.decisionMakersIdentified = 9;
       callbacks.onWorkerUpdate({ ...worker });
-      logAction('research', '9 decision makers identified', 'Verified operational leadership across top qualified carriers', 'findDecisionMaker()');
+
+      tasks[3].status = 'completed';
+      tasks[3].completedAt = new Date().toISOString();
+      tasks[3].result = { verifiedProfiles: 9, authorityLevel: 'VP & Director' };
+      tasks[4].status = 'in_progress';
+      tasks[4].startedAt = new Date().toISOString();
+      callbacks.onTasksUpdate([...tasks]);
+
+      logAction('research', '9 decision makers identified', 'Verified operational leadership across top qualified accounts', 'findDecisionMaker()');
       await this.sleep(1200);
 
       // -------------------------------------------------------------
-      // STAGE 5: PREPARE PERSONALIZED OUTREACH
+      // STAGE 5: PREPARE DELIVERABLES
       // -------------------------------------------------------------
-      updateStatus('PERSONALIZING', 'Drafting personalized value-proposition outreach messages');
+      updateStatus('PERSONALIZING', 'Drafting tailored operational outputs & messages');
       callbacks.onActiveToolChange?.({
         name: 'generateOutreach()',
-        input: { recipients: 6, focus: 'Operational dispatch efficiency & dwell-time reduction' },
+        input: { recipients: 6, focus: worker.goal },
       });
 
-      logAction('worker_action', 'Preparing personalized outreach', 'Synthesizing specific facility expansions into tailored value propositions', 'generateOutreach()');
+      logAction('worker_action', 'Preparing operational outputs', 'Synthesizing verified data points into tailored deliverables', 'generateOutreach()');
       await this.sleep(1800);
 
       worker.stats.outreachPrepared = 6;
       worker.stats.approvalsRequired = 6;
       callbacks.onWorkerUpdate({ ...worker });
-      logAction('worker_action', '6 outreach messages prepared', 'Tailored emails drafted and labeled "Prepared by Worker"', 'generateOutreach()');
+
+      tasks[4].status = 'completed';
+      tasks[4].completedAt = new Date().toISOString();
+      tasks[4].result = { draftsGenerated: 6, qualityReview: 'Passed' };
+      tasks[5].status = 'in_progress';
+      tasks[5].startedAt = new Date().toISOString();
+      callbacks.onTasksUpdate([...tasks]);
+
+      logAction('worker_action', '6 deliverables synthesized', 'Drafts staged and marked "Awaiting Supervisor Sign-off"', 'generateOutreach()');
       await this.sleep(1000);
 
       // -------------------------------------------------------------
       // STAGE 6: PAUSE AT AWAITING APPROVAL (HUMAN-IN-THE-LOOP)
       // -------------------------------------------------------------
-      updateStatus('AWAITING_APPROVAL', 'Execution paused: 6 outreach messages are ready for review.');
+      updateStatus('AWAITING_APPROVAL', 'Execution paused: 6 deliverables are ready for supervisor review.');
       callbacks.onActiveToolChange?.(null);
 
-      logAction('approval', 'Awaiting human approval', '6 outreach messages require supervisor review before any dispatch action');
+      logAction('approval', 'Awaiting human approval', '6 deliverables require supervisor sign-off before dispatch');
 
       const elapsedSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
       const runSummary: WorkerRun = {
@@ -248,7 +349,7 @@ export class WorkerOrchestrator {
     const worker: Worker = {
       ...currentWorker,
       status: 'AWAITING_APPROVAL',
-      currentActionSummary: 'Execution paused: 6 outreach messages are ready for review.',
+      currentActionSummary: 'Execution paused: 6 deliverables are ready for review.',
       stats: {
         prospectsResearched: 32,
         qualifiedProspects: 14,
@@ -265,6 +366,8 @@ export class WorkerOrchestrator {
     const runSummary: WorkerRun = {
       ...INITIAL_COMPLETED_RUN,
       id: `run-fast-${Date.now()}`,
+      workerId: worker.id,
+      goal: worker.goal,
       durationSeconds: 18,
     };
     callbacks.onRunFinished(runSummary);
@@ -276,7 +379,7 @@ export class WorkerOrchestrator {
     const resetWorker: Worker = {
       ...currentWorker,
       status: 'IDLE',
-      currentActionSummary: 'Ready to execute multi-step research plan',
+      currentActionSummary: 'Ready to execute assignment',
       stats: {
         prospectsResearched: 0,
         qualifiedProspects: 0,

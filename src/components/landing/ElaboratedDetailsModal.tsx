@@ -12,7 +12,6 @@ import {
   Layers,
   Lock,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react';
 import { ViewScreen, Worker } from '../../types';
 

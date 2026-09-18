@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Bot, Users, Activity, Menu } from 'lucide-react';
+import { LayoutDashboard, Bot, Users, Activity, Menu, CheckSquare, CheckCircle2 } from 'lucide-react';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopHeader } from './components/layout/TopHeader';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { WorkerWorkspaceView } from './components/workspace/WorkerWorkspaceView';
+import { TasksView } from './components/tasks/TasksView';
+import { ApprovalsView } from './components/approvals/ApprovalsView';
 import { ProspectsView } from './components/prospects/ProspectsView';
+import { ResultsView } from './components/results/ResultsView';
 import { ActivityView } from './components/activity/ActivityView';
 import { WorkersView } from './components/workers/WorkersView';
 import { SettingsView } from './components/settings/SettingsView';
 import { CreateWorkerWizard } from './components/wizard/CreateWorkerWizard';
 import { LandingView } from './components/landing/LandingView';
+import { QuickStartView } from './components/quickstart/QuickStartView';
 import {
   INITIAL_ACTIONS,
   INITIAL_COMPLETED_RUN,
   INITIAL_TASKS,
-  INITIAL_WORKER,
+  INITIAL_WORKERS,
   SEEDED_PROSPECTS,
+  SEEDED_RUNS,
 } from './data/seedData';
 import {
   Prospect,
@@ -29,27 +34,48 @@ import { ExecutionSpeed, orchestrator } from './agents/orchestrator';
 import { aiService, AIConfig } from './services/aiService';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewScreen>('landing');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-
-  // Core Persistent State
-  const [worker, setWorker] = useState<Worker>(() => {
-    const saved = localStorage.getItem('workeros_worker');
-    return saved ? JSON.parse(saved) : INITIAL_WORKER;
+  const [hasCompletedFirstRun, setHasCompletedFirstRun] = useState<boolean>(() => {
+    return localStorage.getItem('staffos_has_completed_first_run') === 'true';
   });
 
+  const [currentView, setCurrentView] = useState<ViewScreen>(() => {
+    const firstRunDone = localStorage.getItem('staffos_has_completed_first_run') === 'true';
+    return firstRunDone ? 'dashboard' : 'quickstart';
+  });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Workforce state (all 5 initial workers)
+  const [workers, setWorkers] = useState<Worker[]>(() => {
+    const saved = localStorage.getItem('staffos_workers');
+    return saved ? JSON.parse(saved) : INITIAL_WORKERS;
+  });
+
+  const [activeWorkerId, setActiveWorkerId] = useState<string>(() => {
+    return workers[0]?.id || 'worker-alex-mercer';
+  });
+
+  const activeWorker = workers.find((w) => w.id === activeWorkerId) || workers[0];
+
   const [prospects, setProspects] = useState<Prospect[]>(() => {
-    const saved = localStorage.getItem('workeros_prospects');
+    const saved = localStorage.getItem('staffos_prospects');
     return saved ? JSON.parse(saved) : SEEDED_PROSPECTS;
   });
 
   const [actions, setActions] = useState<WorkerAction[]>(() => {
-    const saved = localStorage.getItem('workeros_actions');
+    const saved = localStorage.getItem('staffos_actions');
     return saved ? JSON.parse(saved) : INITIAL_ACTIONS;
   });
 
-  const [tasks, setTasks] = useState<WorkerTask[]>(INITIAL_TASKS);
-  const [lastRun, setLastRun] = useState<WorkerRun | null>(INITIAL_COMPLETED_RUN);
+  const [tasks, setTasks] = useState<WorkerTask[]>(() => {
+    const saved = localStorage.getItem('staffos_tasks');
+    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+  });
+
+  const [runs, setRuns] = useState<WorkerRun[]>(() => {
+    const saved = localStorage.getItem('staffos_runs');
+    return saved ? JSON.parse(saved) : SEEDED_RUNS;
+  });
+
   const [activeTool, setActiveTool] = useState<{ name: string; input: unknown; output?: unknown } | null>(null);
 
   // Engine Settings
@@ -60,18 +86,26 @@ export default function App() {
 
   // Synchronize localStorage
   useEffect(() => {
-    localStorage.setItem('workeros_worker', JSON.stringify(worker));
-  }, [worker]);
+    localStorage.setItem('staffos_workers', JSON.stringify(workers));
+  }, [workers]);
 
   useEffect(() => {
-    localStorage.setItem('workeros_prospects', JSON.stringify(prospects));
+    localStorage.setItem('staffos_prospects', JSON.stringify(prospects));
   }, [prospects]);
 
   useEffect(() => {
-    localStorage.setItem('workeros_actions', JSON.stringify(actions));
+    localStorage.setItem('staffos_actions', JSON.stringify(actions));
   }, [actions]);
 
-  // Initial config check
+  useEffect(() => {
+    localStorage.setItem('staffos_tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('staffos_runs', JSON.stringify(runs));
+  }, [runs]);
+
+  // Initial AI config check
   useEffect(() => {
     aiService.getConfig().then((cfg) => {
       setAiConfig(cfg);
@@ -81,18 +115,23 @@ export default function App() {
     });
   }, []);
 
+  // Update a specific worker in the roster
+  const updateWorkerInRoster = (updated: Worker) => {
+    setWorkers((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+  };
+
   // Orchestrator callbacks setup
-  const getOrchestratorCallbacks = () => ({
-    onWorkerUpdate: (updatedWorker: Worker) => setWorker(updatedWorker),
+  const getOrchestratorCallbacks = (targetWorker: Worker) => ({
+    onWorkerUpdate: (updatedWorker: Worker) => updateWorkerInRoster(updatedWorker),
     onTasksUpdate: (updatedTasks: WorkerTask[]) => setTasks(updatedTasks),
     onActionLogged: (newAction: WorkerAction) => setActions((prev) => [newAction, ...prev]),
     onProspectsUpdate: (updatedProspects: Prospect[]) => setProspects(updatedProspects),
     onRunFinished: (run: WorkerRun) => {
-      setLastRun(run);
-      // Mark 6 prospects as prepared
+      setRuns((prev) => [run, ...prev]);
+      // Mark matching prospects as prepared
       setProspects((prev) =>
         prev.map((p, idx) => {
-          if (idx < 6 && p.personalizedOutreach) {
+          if ((!p.workerId || p.workerId === targetWorker.id) && idx < 6 && p.personalizedOutreach) {
             return { ...p, outreachStatus: 'prepared' as const };
           }
           return p;
@@ -103,20 +142,20 @@ export default function App() {
       setActiveTool(toolInfo),
   });
 
-  const handleRunWorker = () => {
+  const handleRunWorker = (targetWorker: Worker = activeWorker) => {
     orchestrator.speed = speed;
     orchestrator.simulateErrorAndRetry = simulateErrorAndRetry;
     orchestrator.forceDemoMode = !isLiveAi;
 
-    orchestrator.runWorker(worker, prospects, getOrchestratorCallbacks());
+    orchestrator.runWorker(targetWorker, prospects, getOrchestratorCallbacks(targetWorker));
   };
 
-  const handleSkipDemo = () => {
-    orchestrator.fastForwardToApproval(worker, getOrchestratorCallbacks());
+  const handleSkipDemo = (targetWorker: Worker = activeWorker) => {
+    orchestrator.fastForwardToApproval(targetWorker, getOrchestratorCallbacks(targetWorker));
   };
 
-  const handleResetWorker = () => {
-    orchestrator.resetWorker(worker, getOrchestratorCallbacks());
+  const handleResetWorker = (targetWorker: Worker = activeWorker) => {
+    orchestrator.resetWorker(targetWorker, getOrchestratorCallbacks(targetWorker));
   };
 
   const handleApproveProspect = (id: string) => {
@@ -124,37 +163,35 @@ export default function App() {
       prev.map((p) => (p.id === id ? { ...p, outreachStatus: 'approved' as const } : p))
     );
 
-    // Log approval action
+    const approvedItem = prospects.find((p) => p.id === id);
+
     const approvalAct: WorkerAction = {
       id: `act-appr-${Date.now()}`,
-      workerId: worker.id,
+      workerId: approvedItem?.workerId || activeWorker.id,
       actionType: 'approval',
       status: 'completed',
-      summary: 'Outreach approved for sending',
-      resultSummary: `Approved personalized email draft for ${prospects.find((p) => p.id === id)?.relevantPerson} at ${prospects.find((p) => p.id === id)?.company}. Ready for dispatch.`,
+      summary: 'Action authorized by supervisor',
+      resultSummary: `Approved operational draft for ${approvedItem?.relevantPerson || 'Recipient'} at ${approvedItem?.company}. Ready for dispatch.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setActions((prev) => [approvalAct, ...prev]);
 
-    // If all prepared messages are approved, mark worker as completed!
-    setWorker((prev) => {
-      const remainingAwaiting = prospects.filter(
-        (p) => p.id !== id && p.outreachStatus === 'prepared'
-      ).length;
-
-      return {
-        ...prev,
-        status: remainingAwaiting === 0 ? 'COMPLETED' : 'AWAITING_APPROVAL',
-        currentActionSummary:
-          remainingAwaiting === 0
-            ? 'All outreach approved and queued for dispatch'
-            : `${remainingAwaiting} messages awaiting approval`,
-        stats: {
-          ...prev.stats,
-          approvalsRequired: remainingAwaiting,
-        },
-      };
-    });
+    // Recalculate remaining approvals on workers
+    setWorkers((prev) =>
+      prev.map((w) => {
+        const remainingForWorker = prospects.filter(
+          (p) => (!p.workerId || p.workerId === w.id) && p.id !== id && p.outreachStatus === 'prepared'
+        ).length;
+        return {
+          ...w,
+          status: remainingForWorker === 0 ? 'COMPLETED' : w.status,
+          stats: {
+            ...w.stats,
+            approvalsRequired: remainingForWorker,
+          },
+        };
+      })
+    );
   };
 
   const handleRejectProspect = (id: string) => {
@@ -162,13 +199,14 @@ export default function App() {
       prev.map((p) => (p.id === id ? { ...p, outreachStatus: 'rejected' as const } : p))
     );
 
+    const target = prospects.find((p) => p.id === id);
     const rejectAct: WorkerAction = {
       id: `act-rej-${Date.now()}`,
-      workerId: worker.id,
+      workerId: target?.workerId || activeWorker.id,
       actionType: 'approval',
       status: 'completed',
-      summary: 'Outreach draft rejected',
-      resultSummary: `Supervisor rejected draft for ${prospects.find((p) => p.id === id)?.company}. Message withheld from dispatch.`,
+      summary: 'Action draft rejected by supervisor',
+      resultSummary: `Supervisor rejected draft for ${target?.company}. Message withheld from external dispatch.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setActions((prev) => [rejectAct, ...prev]);
@@ -184,7 +222,7 @@ export default function App() {
               ...p.personalizedOutreach,
               subject,
               body,
-              version: p.personalizedOutreach.version + 1,
+              version: (p.personalizedOutreach.version || 1) + 1,
             },
           };
         }
@@ -194,11 +232,11 @@ export default function App() {
 
     const editAct: WorkerAction = {
       id: `act-edit-${Date.now()}`,
-      workerId: worker.id,
+      workerId: activeWorker.id,
       actionType: 'approval',
       status: 'completed',
-      summary: 'Outreach edited by supervisor',
-      resultSummary: `Updated message subject and body for ${prospects.find((p) => p.id === id)?.company}.`,
+      summary: 'Action draft edited by supervisor',
+      resultSummary: `Supervisor customized draft parameters for ${prospects.find((p) => p.id === id)?.company}.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setActions((prev) => [editAct, ...prev]);
@@ -213,56 +251,94 @@ export default function App() {
 
     const bulkAct: WorkerAction = {
       id: `act-bulk-${Date.now()}`,
-      workerId: worker.id,
+      workerId: activeWorker.id,
       actionType: 'approval',
       status: 'completed',
-      summary: 'Bulk approval granted for all 6 outreach messages',
-      resultSummary: 'All drafted emails marked "Approved for sending" by human supervisor.',
+      summary: 'Bulk approval granted across workforce staging queue',
+      resultSummary: 'All drafted actions authorized for dispatch by human supervisor.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setActions((prev) => [bulkAct, ...prev]);
 
-    setWorker((prev) => ({
-      ...prev,
-      status: 'COMPLETED',
-      currentActionSummary: 'All outreach approved and queued for dispatch',
-      stats: { ...prev.stats, approvalsRequired: 0 },
-    }));
+    setWorkers((prev) =>
+      prev.map((w) => ({
+        ...w,
+        status: 'COMPLETED',
+        currentActionSummary: 'All operational outputs approved and authorized',
+        stats: { ...w.stats, approvalsRequired: 0 },
+      }))
+    );
   };
 
   const handleWorkerCreated = (newWorker: Worker) => {
-    setWorker(newWorker);
+    setWorkers((prev) => [newWorker, ...prev]);
+    setActiveWorkerId(newWorker.id);
     setCurrentView('workspace');
 
-    // Automatically trigger planning on new worker
     setTimeout(() => {
-      orchestrator.speed = speed;
-      orchestrator.forceDemoMode = !isLiveAi;
-      orchestrator.runWorker(newWorker, prospects, getOrchestratorCallbacks());
+      handleRunWorker(newWorker);
     }, 400);
   };
 
-  const handleResetAllData = () => {
+  const handleResetDemo = () => {
+    localStorage.removeItem('staffos_workers');
+    localStorage.removeItem('staffos_prospects');
+    localStorage.removeItem('staffos_actions');
+    localStorage.removeItem('staffos_tasks');
+    localStorage.removeItem('staffos_runs');
+    localStorage.removeItem('staffos_has_completed_first_run');
     localStorage.removeItem('workeros_worker');
     localStorage.removeItem('workeros_prospects');
     localStorage.removeItem('workeros_actions');
-    setWorker(INITIAL_WORKER);
+
+    setWorkers(INITIAL_WORKERS);
+    setActiveWorkerId(INITIAL_WORKERS[0].id);
     setProspects(SEEDED_PROSPECTS);
     setActions(INITIAL_ACTIONS);
     setTasks(INITIAL_TASKS);
-    setLastRun(INITIAL_COMPLETED_RUN);
+    setRuns(SEEDED_RUNS);
     setActiveTool(null);
+    setHasCompletedFirstRun(false);
+    setCurrentView('quickstart');
   };
 
-  // If on landing view, render full-width immersive 11x experience
+  const handleStartAssignmentFromQuickStart = (worker: Worker, customGoal: string) => {
+    setHasCompletedFirstRun(true);
+    localStorage.setItem('staffos_has_completed_first_run', 'true');
+
+    const updatedWorker: Worker = {
+      ...worker,
+      goal: customGoal.trim() || worker.goal,
+      status: 'IDLE',
+      currentActionSummary: 'Assignment initialized. Commencing automated execution.',
+    };
+
+    setWorkers((prev) =>
+      prev.map((w) => (w.id === updatedWorker.id ? updatedWorker : w))
+    );
+    setActiveWorkerId(updatedWorker.id);
+    setCurrentView('workspace');
+
+    setTimeout(() => {
+      handleRunWorker(updatedWorker);
+    }, 200);
+  };
+
+  const handleExplorePlatformFromQuickStart = () => {
+    setHasCompletedFirstRun(true);
+    localStorage.setItem('staffos_has_completed_first_run', 'true');
+    setCurrentView('dashboard');
+  };
+
+  // If on landing view, render editorial experience
   if (currentView === 'landing') {
     return (
       <LandingView
-        worker={worker}
+        worker={activeWorker}
         onNavigate={(v) => setCurrentView(v)}
         onRunWorker={() => {
           setCurrentView('workspace');
-          handleRunWorker();
+          handleRunWorker(activeWorker);
         }}
         isLiveAi={isLiveAi}
       />
@@ -271,16 +347,20 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 font-sans select-none antialiased">
-      {/* Left Sidebar (Desktop persistent, Mobile slide-in drawer) */}
+      {/* Left Sidebar */}
       <Sidebar
         currentView={currentView}
         onNavigate={(v) => {
           setCurrentView(v);
           setIsMobileMenuOpen(false);
         }}
-        worker={worker}
+        worker={activeWorker}
         onCreateWorkerClick={() => {
           setCurrentView('create_worker');
+          setIsMobileMenuOpen(false);
+        }}
+        onNewAssignmentClick={() => {
+          setCurrentView('quickstart');
           setIsMobileMenuOpen(false);
         }}
         isLiveAi={isLiveAi}
@@ -292,43 +372,98 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <TopHeader
           currentView={currentView}
-          worker={worker}
+          worker={activeWorker}
           onNavigate={(v) => setCurrentView(v)}
           onRunWorker={() => {
             setCurrentView('workspace');
-            handleRunWorker();
+            handleRunWorker(activeWorker);
           }}
+          onNewAssignment={() => setCurrentView('quickstart')}
+          onResetDemo={handleResetDemo}
           isLiveAi={isLiveAi}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         />
 
         {/* View Routing */}
         <main className="flex-1 overflow-y-auto bg-slate-50/70 pb-16 md:pb-0">
+          {currentView === 'quickstart' && (
+            <QuickStartView
+              workers={workers}
+              onStartAssignment={handleStartAssignmentFromQuickStart}
+              onExplorePlatform={handleExplorePlatformFromQuickStart}
+            />
+          )}
+
           {currentView === 'dashboard' && (
             <DashboardView
-              worker={worker}
+              workers={workers}
+              activeWorker={activeWorker}
               recentActions={actions}
+              tasks={tasks}
               onNavigate={(v) => setCurrentView(v)}
-              onRunWorker={handleRunWorker}
+              onNewAssignment={() => setCurrentView('quickstart')}
+              onSelectWorker={(w) => setActiveWorkerId(w.id)}
+              onRunWorker={() => handleRunWorker(activeWorker)}
+              onResetDemo={handleResetDemo}
+            />
+          )}
+
+          {currentView === 'workers' && (
+            <WorkersView
+              workers={workers}
+              activeWorker={activeWorker}
+              onSelectWorker={(w) => setActiveWorkerId(w.id)}
+              onNavigate={(v) => setCurrentView(v)}
+              onCreateWorkerClick={() => setCurrentView('create_worker')}
+              onRunWorker={(w) => {
+                setActiveWorkerId(w.id);
+                setCurrentView('workspace');
+                handleRunWorker(w);
+              }}
             />
           )}
 
           {currentView === 'workspace' && (
             <WorkerWorkspaceView
-              worker={worker}
+              worker={activeWorker}
+              allWorkers={workers}
+              onSelectWorker={(w) => setActiveWorkerId(w.id)}
               activeTool={activeTool}
               actions={actions}
-              lastRun={lastRun}
-              onRunWorker={handleRunWorker}
-              onSkipDemo={handleSkipDemo}
-              onResetWorker={handleResetWorker}
+              lastRun={runs[0] || INITIAL_COMPLETED_RUN}
+              onRunWorker={() => handleRunWorker(activeWorker)}
+              onSkipDemo={() => handleSkipDemo(activeWorker)}
+              onResetWorker={() => handleResetWorker(activeWorker)}
               onOpenProspects={() => setCurrentView('prospects')}
+              onOpenApprovals={() => setCurrentView('approvals')}
               speed={speed}
               onSpeedChange={(s) => setSpeed(s)}
               simulateErrorAndRetry={simulateErrorAndRetry}
               onToggleSimulateError={(val) => setSimulateErrorAndRetry(val)}
               isLiveAi={isLiveAi}
               onToggleLiveAi={(val) => setIsLiveAi(val)}
+              onNavigate={(v) => setCurrentView(v)}
+              onNewAssignment={() => setCurrentView('quickstart')}
+            />
+          )}
+
+          {currentView === 'tasks' && (
+            <TasksView
+              tasks={tasks}
+              workers={workers}
+              selectedWorkerId={activeWorker.id}
+              onSelectWorker={(id) => setActiveWorkerId(id)}
+              onNavigateToApprovals={() => setCurrentView('approvals')}
+            />
+          )}
+
+          {currentView === 'approvals' && (
+            <ApprovalsView
+              prospects={prospects}
+              onApproveProspect={handleApproveProspect}
+              onRejectProspect={handleRejectProspect}
+              onSaveOutreach={handleSaveOutreach}
+              onBulkApproveAll={handleBulkApproveAll}
             />
           )}
 
@@ -342,23 +477,27 @@ export default function App() {
             />
           )}
 
-          {currentView === 'activity' && (
-            <ActivityView actions={actions} />
+          {currentView === 'results' && (
+            <ResultsView
+              runs={runs}
+              prospects={prospects}
+              workers={workers}
+              onNavigateToWorker={(id) => {
+                setActiveWorkerId(id);
+                setCurrentView('workspace');
+              }}
+            />
           )}
 
-          {currentView === 'workers' && (
-            <WorkersView
-              worker={worker}
-              onNavigate={(v) => setCurrentView(v)}
-              onCreateWorkerClick={() => setCurrentView('create_worker')}
-            />
+          {currentView === 'activity' && (
+            <ActivityView actions={actions} />
           )}
 
           {currentView === 'settings' && (
             <SettingsView
               isLiveAi={isLiveAi}
               onToggleLiveAi={(val) => setIsLiveAi(val)}
-              onResetAllData={handleResetAllData}
+              onResetAllData={handleResetDemo}
               aiConfig={aiConfig}
             />
           )}
@@ -375,7 +514,7 @@ export default function App() {
         <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-around z-30 px-2 shadow-xs">
           <button
             onClick={() => setCurrentView('dashboard')}
-            className={`flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium transition-colors cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium transition-colors cursor-pointer ${
               currentView === 'dashboard' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -383,35 +522,35 @@ export default function App() {
             <span>Dashboard</span>
           </button>
           <button
+            onClick={() => setCurrentView('workers')}
+            className={`flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium transition-colors cursor-pointer ${
+              currentView === 'workers' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Users className="w-4 h-4 mb-0.5" />
+            <span>Workforce</span>
+          </button>
+          <button
             onClick={() => setCurrentView('workspace')}
-            className={`flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium transition-colors cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium transition-colors cursor-pointer ${
               currentView === 'workspace' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Bot className="w-4 h-4 mb-0.5" />
-            <span>Staff</span>
+            <span>Console</span>
           </button>
           <button
-            onClick={() => setCurrentView('prospects')}
-            className={`flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium transition-colors cursor-pointer ${
-              currentView === 'prospects' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
+            onClick={() => setCurrentView('approvals')}
+            className={`flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium transition-colors cursor-pointer ${
+              currentView === 'approvals' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Users className="w-4 h-4 mb-0.5" />
-            <span>Prospects</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('activity')}
-            className={`flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium transition-colors cursor-pointer ${
-              currentView === 'activity' ? 'text-slate-900 font-semibold' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Activity className="w-4 h-4 mb-0.5" />
-            <span>Activity</span>
+            <CheckCircle2 className="w-4 h-4 mb-0.5" />
+            <span>Approvals</span>
           </button>
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-3 text-[10px] font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+            className="flex flex-col items-center justify-center py-1 px-2 text-[10px] font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
           >
             <Menu className="w-4 h-4 mb-0.5" />
             <span>Menu</span>

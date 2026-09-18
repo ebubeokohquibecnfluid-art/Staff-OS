@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
-  Play,
   Layers,
-  Sparkles,
   Info,
   Maximize2,
   ChevronLeft,
   ChevronRight,
   X,
   Compass,
-  CheckCircle2,
   ShieldCheck,
-  Building2,
-  Activity,
-  CheckSquare,
 } from 'lucide-react';
 import { ViewScreen, Worker } from '../../types';
 import { ElaboratedDetailsModal } from './ElaboratedDetailsModal';
 
 // High-resolution photography assets
-import autonomousCoreImg from '../../assets/images/gallery_autonomous_core_1789682277885.jpg';
 import salesResearchImg from '../../assets/images/service_sales_research_1789681967814.jpg';
 import fleetLogisticsImg from '../../assets/images/service_fleet_logistics_1789681979057.jpg';
 import transitYardImg from '../../assets/images/gallery_transit_yard_1789682291205.jpg';
@@ -30,31 +23,20 @@ import desertCanyonImg from '../../assets/images/desert_canyon_hero_178968153833
 
 interface StaffItem {
   id: string;
+  plate: string;
   name: string;
   role: string;
   category: string;
   description: string;
   image: string;
   targetView: ViewScreen;
-  viewName: string;
-  ctaText: string;
+  secondaryCta: string;
 }
 
 const STAFF_WORKFORCE: StaffItem[] = [
   {
-    id: 'core',
-    name: 'Your Digital Workforce',
-    role: 'Operations Coordination',
-    category: 'Workforce Core',
-    description:
-      'Staff OS lets businesses assign goals to AI staff that can research, analyze, execute multi-step tasks and bring important decisions back to a human.',
-    image: autonomousCoreImg,
-    targetView: 'dashboard',
-    viewName: 'Operations Dashboard',
-    ctaText: 'Explore in Operations Dashboard',
-  },
-  {
     id: 'sales-research',
+    plate: 'PLATE 01',
     name: 'Alex Mercer',
     role: 'Sales Research Staff',
     category: 'Market Intelligence',
@@ -62,11 +44,11 @@ const STAFF_WORKFORCE: StaffItem[] = [
       'Finds potential customers, researches companies, qualifies prospects and prepares personalized outreach for your approval.',
     image: salesResearchImg,
     targetView: 'prospects',
-    viewName: 'Approvals Queue',
-    ctaText: 'Explore in Approvals Queue',
+    secondaryCta: 'Open Approval Queue',
   },
   {
     id: 'fleet-logistics',
+    plate: 'PLATE 02',
     name: 'Jordan Hayes',
     role: 'Freight & Carrier Staff',
     category: 'Logistics Operations',
@@ -74,11 +56,11 @@ const STAFF_WORKFORCE: StaffItem[] = [
       'Matches carriers, routes and available capacity to freight requirements.',
     image: fleetLogisticsImg,
     targetView: 'workspace',
-    viewName: 'Tasks Console',
-    ctaText: 'Explore in Tasks Console',
+    secondaryCta: 'Open Tasks Console',
   },
   {
     id: 'transit-yard',
+    plate: 'PLATE 03',
     name: 'Field Logistics Staff',
     role: 'Carrier Hub Operations',
     category: 'Terminal Operations',
@@ -86,11 +68,11 @@ const STAFF_WORKFORCE: StaffItem[] = [
       'Monitors regional carrier activity, terminal operations and fleet utilization.',
     image: transitYardImg,
     targetView: 'workspace',
-    viewName: 'Execution Console',
-    ctaText: 'Explore in Execution Console',
+    secondaryCta: 'Open Execution Console',
   },
   {
     id: 'compliance-audit',
+    plate: 'PLATE 04',
     name: 'Morgan Vance',
     role: 'Compliance Staff',
     category: 'Regulatory Governance',
@@ -98,11 +80,11 @@ const STAFF_WORKFORCE: StaffItem[] = [
       'Reviews filings, checks safety information and flags potential compliance risks.',
     image: complianceAuditImg,
     targetView: 'activity',
-    viewName: 'Audit Stream',
-    ctaText: 'Explore in Audit Stream',
+    secondaryCta: 'Open Audit Stream',
   },
   {
     id: 'customer-ops',
+    plate: 'PLATE 05',
     name: 'Elena Chen',
     role: 'Customer Support Staff',
     category: 'Support Operations',
@@ -110,8 +92,7 @@ const STAFF_WORKFORCE: StaffItem[] = [
       'Triages customer inquiries, retrieves verified information and brings important incidents to a supervisor.',
     image: supportTriageImg,
     targetView: 'dashboard',
-    viewName: 'Operations Console',
-    ctaText: 'Explore in Operations Console',
+    secondaryCta: 'Open Operations Console',
   },
 ];
 
@@ -144,12 +125,12 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
   return (
     <div className="w-full min-h-screen bg-slate-950 text-white font-sans selection:bg-white selection:text-slate-950 flex flex-col relative">
-      {/* 1. MINIMAL EDITORIAL HEADER */}
+      {/* 1. MINIMAL EDITORIAL NAVIGATION */}
       <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-8 py-4 flex items-center justify-between pointer-events-none">
         {/* Brand */}
         <div
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="pointer-events-auto flex items-center gap-3 cursor-pointer bg-slate-950/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 hover:border-white/25 transition-all shadow-xl"
+          className="pointer-events-auto flex items-center gap-3 cursor-pointer bg-slate-950/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 hover:border-white/25 transition-all shadow-xl"
         >
           <div className="w-8 h-8 rounded-lg bg-white text-slate-950 flex items-center justify-center font-bold">
             <Layers className="w-4 h-4" />
@@ -165,8 +146,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
 
         {/* Minimal Navigation & Actions */}
-        <div className="pointer-events-auto flex items-center gap-2 sm:gap-4">
-          <nav className="hidden md:flex items-center gap-6 px-4 py-2 rounded-xl bg-slate-950/70 backdrop-blur-md border border-white/10 text-xs font-semibold text-slate-300">
+        <div className="pointer-events-auto flex items-center gap-3">
+          <nav className="hidden md:flex items-center gap-6 px-4 py-2 rounded-xl bg-slate-950/75 backdrop-blur-md border border-white/10 text-xs font-semibold text-slate-300">
             <a href="#staff" className="hover:text-white transition-colors">
               Staff
             </a>
@@ -180,23 +161,6 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Learn More
             </button>
           </nav>
-
-          {/* Secondary CTA: See how it works */}
-          <button
-            onClick={() => {
-              const el = document.getElementById('how-it-works');
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth' });
-              } else {
-                setIsLearnMoreOpen(true);
-              }
-            }}
-            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-lg transition-all cursor-pointer"
-          >
-            <Info className="w-3.5 h-3.5 text-slate-300" />
-            <span className="hidden sm:inline">See how it works</span>
-            <span className="sm:hidden">Details</span>
-          </button>
 
           {/* Primary CTA: Explore Staff OS */}
           <button
@@ -289,8 +253,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
           {/* Slide Navigation Controls */}
           <div className="flex flex-col items-start md:items-end gap-3">
-            <div className="text-xs text-slate-400 font-mono">
-              FEATURED STAFF: <span className="text-white font-sans">{currentHero.name}</span>
+            <div className="text-xs text-slate-400 font-mono tracking-wider">
+              FEATURED STAFF: <span className="text-white font-mono font-semibold">{currentHero.name.toUpperCase()}</span>
             </div>
 
             <div className="flex items-center gap-2 bg-slate-950/70 backdrop-blur-md p-1.5 rounded-xl border border-white/15">
@@ -333,15 +297,12 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
       </section>
 
-      {/* 3. NEW "HOW STAFF OS WORKS" EDITORIAL SECTION */}
+      {/* 3. HOW STAFF OS WORKS EDITORIAL SECTION */}
       <section
         id="how-it-works"
         className="w-full bg-slate-950 px-4 sm:px-8 py-20 sm:py-28 border-t border-white/10 max-w-7xl mx-auto space-y-14"
       >
         <div className="space-y-3 max-w-2xl">
-          <div className="text-[11px] font-mono uppercase tracking-widest text-emerald-400">
-            Operational Workflow
-          </div>
           <h2 className="text-3xl sm:text-5xl font-bold text-white font-editorial tracking-tight">
             HOW STAFF OS WORKS
           </h2>
@@ -363,8 +324,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Give your staff a goal.
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 font-light leading-relaxed">
-              Define target accounts, criteria, or logistics requirements. Your AI staff ingests the
-              mission and sets concrete milestones.
+              Define target accounts, criteria, or logistics requirements. Your AI staff
+              understands the goal and breaks it into concrete steps.
             </p>
           </div>
 
@@ -408,8 +369,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Your staff finishes the assignment and records the result.
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 font-light leading-relaxed">
-              Finished assignments are recorded in immutable audit logs with verified performance
-              metrics and next actions.
+              Finished assignments are recorded with their results, actions taken and next steps.
             </p>
           </div>
         </div>
@@ -420,7 +380,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         id="staff"
         className="w-full bg-slate-950 px-4 sm:px-8 py-16 sm:py-24 border-t border-white/10 max-w-7xl mx-auto space-y-12"
       >
-        {/* Section Intro */}
+        {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-6">
           <div className="space-y-1">
             <div className="text-[11px] font-mono uppercase tracking-widest text-emerald-400">
@@ -429,6 +389,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <h2 className="text-2xl sm:text-4xl font-bold text-white font-editorial tracking-tight">
               THE STAFF OS WORKFORCE
             </h2>
+            <p className="text-xs sm:text-sm text-slate-400 font-light pt-1">
+              AI staff for research, operations and business execution.
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -449,15 +412,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </div>
         </div>
 
-        {/* 6 Staff Plates Grid */}
+        {/* 5 Editorial Staff Plates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {STAFF_WORKFORCE.map((item, index) => (
+          {STAFF_WORKFORCE.map((item) => (
             <div
               key={item.id}
-              className="group relative rounded-2xl overflow-hidden border border-white/10 bg-slate-900 shadow-xl transition-all duration-300 hover:border-white/30 flex flex-col justify-end"
+              className="group relative rounded-2xl overflow-hidden border border-white/10 bg-slate-900 shadow-xl transition-all duration-300 hover:border-white/30 flex flex-col justify-between"
             >
               {/* Photo Plate */}
-              <div className="relative aspect-16/10 overflow-hidden bg-slate-950">
+              <div
+                onClick={() => setLightboxStaff(item)}
+                className="relative aspect-16/10 overflow-hidden bg-slate-950 cursor-pointer"
+              >
                 <img
                   src={item.image}
                   alt={item.name}
@@ -468,9 +434,12 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
                 {/* Enlarge / Full View Trigger */}
                 <button
-                  onClick={() => setLightboxStaff(item)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxStaff(item);
+                  }}
                   className="absolute top-3 right-3 p-2 rounded-xl bg-slate-950/75 backdrop-blur-md border border-white/15 text-white/80 hover:text-white hover:bg-slate-900 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
-                  title="View staff plate"
+                  title="Explore Staff"
                   aria-label="Enlarge image"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -485,35 +454,36 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
 
               {/* Staff Description & Details */}
-              <div className="p-5 space-y-2.5 bg-slate-900/95 border-t border-white/10">
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="font-mono text-slate-500">PLATE 0{index + 1}</span>
-                  <span className="font-semibold text-slate-300">{item.role}</span>
+              <div className="p-5 space-y-3 bg-slate-900/95 border-t border-white/10 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span className="font-mono text-slate-500">{item.plate}</span>
+                    <span className="font-semibold text-slate-300">{item.role}</span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-white font-editorial tracking-tight">
+                    {item.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-300 font-light leading-relaxed">
+                    "{item.description}"
+                  </p>
                 </div>
 
-                <h3 className="text-lg font-bold text-white font-editorial tracking-tight">
-                  {item.name}
-                </h3>
-
-                {/* Approaching, crystal-clear description */}
-                <p className="text-xs text-slate-300 font-light leading-relaxed">
-                  "{item.description}"
-                </p>
-
-                {/* Direct Action Link into Platform */}
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                {/* Functional Actions: Explore Staff + Destination Console */}
+                <div className="pt-3.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <button
                     onClick={() => setLightboxStaff(item)}
-                    className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-colors cursor-pointer flex items-center gap-1.5"
                   >
-                    View Staff
+                    <span>Explore Staff</span>
                   </button>
 
                   <button
                     onClick={() => onNavigate(item.targetView)}
-                    className="text-white font-semibold hover:text-emerald-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                   >
-                    <span>{item.ctaText}</span>
+                    <span>{item.secondaryCta}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -530,7 +500,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             referrerPolicy="no-referrer"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
 
           <div className="relative z-10 max-w-2xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-[11px] font-mono text-emerald-400">
@@ -538,17 +508,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <span>SUPERVISED AUTONOMY</span>
             </div>
 
-            <h3 className="text-2xl sm:text-4xl font-bold text-white font-editorial tracking-tight leading-tight">
-              Be more human.
-              <br />
-              <span className="text-slate-200 font-light">
+            <div className="space-y-1">
+              <h3 className="text-3xl sm:text-5xl font-bold text-white font-editorial tracking-tight leading-none">
+                Be more human.
+              </h3>
+              <div className="text-2xl sm:text-3xl text-slate-200 font-light font-editorial">
                 Leave repetitive work to Staff OS.
-              </span>
-            </h3>
+              </div>
+            </div>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light max-w-xl">
-              Let Staff OS handle the repetitive work. Keep people in control of the important
-              decisions.
+              Let your AI staff handle the work while you stay in control of the decisions that
+              matter.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -561,7 +532,14 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </button>
 
               <button
-                onClick={() => setIsLearnMoreOpen(true)}
+                onClick={() => {
+                  const el = document.getElementById('how-it-works');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    setIsLearnMoreOpen(true);
+                  }
+                }}
                 className="px-4 py-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-white/20 text-white text-xs font-semibold backdrop-blur-md flex items-center gap-2 cursor-pointer"
               >
                 <Info className="w-4 h-4" />
@@ -633,7 +611,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <div className="p-6 bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-white/10">
               <div className="space-y-1">
                 <div className="text-[10px] font-mono text-emerald-400 uppercase">
-                  {lightboxStaff.category} • {lightboxStaff.role}
+                  {lightboxStaff.plate} • {lightboxStaff.category} • {lightboxStaff.role}
                 </div>
                 <h4 className="text-xl font-bold text-white font-editorial">
                   {lightboxStaff.name}
@@ -650,7 +628,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 }}
                 className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
-                <span>{lightboxStaff.ctaText}</span>
+                <span>{lightboxStaff.secondaryCta}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
