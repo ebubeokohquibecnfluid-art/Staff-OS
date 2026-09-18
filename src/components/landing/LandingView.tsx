@@ -162,9 +162,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </button>
           </nav>
 
-          {/* Primary CTA: Explore Staff OS */}
+          {/* Action CTAs */}
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => onNavigate('quickstart')}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-white/10 text-xs font-semibold shadow-xl transition-all cursor-pointer"
+          >
+            <span className="font-bold">+</span>
+            <span>Start Assignment</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('quickstart')}
             className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold shadow-xl transition-all cursor-pointer group"
           >
             <Compass className="w-3.5 h-3.5 text-slate-950" />
@@ -227,11 +235,19 @@ export const LandingView: React.FC<LandingViewProps> = ({
             {/* CTAs */}
             <div className="pt-3 flex flex-wrap items-center gap-3">
               <button
-                onClick={() => onNavigate('dashboard')}
+                onClick={() => onNavigate('quickstart')}
                 className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-sm font-semibold shadow-2xl flex items-center gap-2 transition-transform active:scale-95 cursor-pointer group"
               >
                 <span>Explore Staff OS</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => onNavigate('quickstart')}
+                className="px-5 py-3.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 backdrop-blur-md border border-white/20 text-white text-sm font-semibold shadow-2xl flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                <span className="text-emerald-400 font-bold">+</span>
+                <span>Run an Assignment</span>
               </button>
 
               <button
@@ -243,10 +259,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     setIsLearnMoreOpen(true);
                   }
                 }}
-                className="px-5 py-3.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 backdrop-blur-md border border-white/20 text-white text-sm font-semibold shadow-2xl flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-4 py-3.5 rounded-xl text-slate-400 hover:text-white text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <span>See how it works</span>
-                <ArrowRight className="w-4 h-4 text-slate-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
               </button>
             </div>
           </div>
@@ -524,7 +540,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <button
-                onClick={() => onNavigate('dashboard')}
+                onClick={() => onNavigate('quickstart')}
                 className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold shadow-lg flex items-center gap-2 cursor-pointer"
               >
                 <Compass className="w-4 h-4" />
@@ -575,7 +591,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Learn More
             </button>
             <button
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => onNavigate('quickstart')}
               className="hover:text-white transition-colors cursor-pointer text-slate-300 font-semibold"
             >
               Explore Staff OS

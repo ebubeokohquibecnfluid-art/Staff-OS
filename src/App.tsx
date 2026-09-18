@@ -39,8 +39,12 @@ export default function App() {
   });
 
   const [currentView, setCurrentView] = useState<ViewScreen>(() => {
-    const firstRunDone = localStorage.getItem('staffos_has_completed_first_run') === 'true';
-    return firstRunDone ? 'dashboard' : 'quickstart';
+    const hasVisited = localStorage.getItem('staffos_has_visited') === 'true';
+    if (!hasVisited) {
+      return 'landing';
+    }
+    const savedView = localStorage.getItem('staffos_current_view') as ViewScreen | null;
+    return savedView || 'dashboard';
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -280,6 +284,15 @@ export default function App() {
     }, 400);
   };
 
+  const handleNavigate = (view: ViewScreen) => {
+    setCurrentView(view);
+    setIsMobileMenuOpen(false);
+    if (view !== 'landing') {
+      localStorage.setItem('staffos_has_visited', 'true');
+      localStorage.setItem('staffos_current_view', view);
+    }
+  };
+
   const handleResetDemo = () => {
     localStorage.removeItem('staffos_workers');
     localStorage.removeItem('staffos_prospects');
@@ -287,6 +300,8 @@ export default function App() {
     localStorage.removeItem('staffos_tasks');
     localStorage.removeItem('staffos_runs');
     localStorage.removeItem('staffos_has_completed_first_run');
+    localStorage.removeItem('staffos_has_visited');
+    localStorage.removeItem('staffos_current_view');
     localStorage.removeItem('workeros_worker');
     localStorage.removeItem('workeros_prospects');
     localStorage.removeItem('workeros_actions');
@@ -299,12 +314,14 @@ export default function App() {
     setRuns(SEEDED_RUNS);
     setActiveTool(null);
     setHasCompletedFirstRun(false);
-    setCurrentView('quickstart');
+    setCurrentView('landing');
   };
 
   const handleStartAssignmentFromQuickStart = (worker: Worker, customGoal: string) => {
     setHasCompletedFirstRun(true);
     localStorage.setItem('staffos_has_completed_first_run', 'true');
+    localStorage.setItem('staffos_has_visited', 'true');
+    localStorage.setItem('staffos_current_view', 'workspace');
 
     const updatedWorker: Worker = {
       ...worker,
@@ -327,7 +344,7 @@ export default function App() {
   const handleExplorePlatformFromQuickStart = () => {
     setHasCompletedFirstRun(true);
     localStorage.setItem('staffos_has_completed_first_run', 'true');
-    setCurrentView('dashboard');
+    handleNavigate('dashboard');
   };
 
   // If on landing view, render editorial experience
@@ -335,9 +352,9 @@ export default function App() {
     return (
       <LandingView
         worker={activeWorker}
-        onNavigate={(v) => setCurrentView(v)}
+        onNavigate={handleNavigate}
         onRunWorker={() => {
-          setCurrentView('workspace');
+          handleNavigate('workspace');
           handleRunWorker(activeWorker);
         }}
         isLiveAi={isLiveAi}
@@ -350,18 +367,13 @@ export default function App() {
       {/* Left Sidebar */}
       <Sidebar
         currentView={currentView}
-        onNavigate={(v) => {
-          setCurrentView(v);
-          setIsMobileMenuOpen(false);
-        }}
+        onNavigate={handleNavigate}
         worker={activeWorker}
         onCreateWorkerClick={() => {
-          setCurrentView('create_worker');
-          setIsMobileMenuOpen(false);
+          handleNavigate('create_worker');
         }}
         onNewAssignmentClick={() => {
-          setCurrentView('quickstart');
-          setIsMobileMenuOpen(false);
+          handleNavigate('quickstart');
         }}
         isLiveAi={isLiveAi}
         isOpenMobile={isMobileMenuOpen}
@@ -373,12 +385,12 @@ export default function App() {
         <TopHeader
           currentView={currentView}
           worker={activeWorker}
-          onNavigate={(v) => setCurrentView(v)}
+          onNavigate={handleNavigate}
           onRunWorker={() => {
-            setCurrentView('workspace');
+            handleNavigate('workspace');
             handleRunWorker(activeWorker);
           }}
-          onNewAssignment={() => setCurrentView('quickstart')}
+          onNewAssignment={() => handleNavigate('quickstart')}
           onResetDemo={handleResetDemo}
           isLiveAi={isLiveAi}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
@@ -400,8 +412,8 @@ export default function App() {
               activeWorker={activeWorker}
               recentActions={actions}
               tasks={tasks}
-              onNavigate={(v) => setCurrentView(v)}
-              onNewAssignment={() => setCurrentView('quickstart')}
+              onNavigate={handleNavigate}
+              onNewAssignment={() => handleNavigate('quickstart')}
               onSelectWorker={(w) => setActiveWorkerId(w.id)}
               onRunWorker={() => handleRunWorker(activeWorker)}
               onResetDemo={handleResetDemo}
