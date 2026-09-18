@@ -46,10 +46,10 @@ export const ElaboratedDetailsModal: React.FC<ElaboratedDetailsModalProps> = ({
             </div>
             <div>
               <div className="text-sm font-bold text-slate-950 font-editorial">
-                Staff OS • Platform Architecture & Details
+                STAFF OS • How It Works & Platform Architecture
               </div>
               <div className="text-[11px] font-mono text-slate-500">
-                Supervised Autonomous Workforce Specification v2.4
+                AI staff that actually work • Human-in-the-Loop Supervision
               </div>
             </div>
           </div>
@@ -126,7 +126,7 @@ export const ElaboratedDetailsModal: React.FC<ElaboratedDetailsModalProps> = ({
                   What is Staff OS?
                 </h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Staff OS is an enterprise operating system for autonomous digital employees. Rather than relying on unpredictable chatbots, Staff OS equips organizations with specialized workers capable of executing end-to-end operational missions—from market discovery to contract drafting—with deterministic milestones and mandatory supervisory authorization.
+                  Staff OS gives businesses AI staff that can be assigned work, execute multi-step tasks, report results, and ask for human approval when important decisions are required. Rather than unreliable chatbots, Staff OS provides dedicated digital staff members who research, analyze, execute, and keep people in control of critical decisions.
                 </p>
               </div>
 
