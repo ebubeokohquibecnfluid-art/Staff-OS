@@ -29,7 +29,7 @@ import { ExecutionSpeed, orchestrator } from './agents/orchestrator';
 import { aiService, AIConfig } from './services/aiService';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewScreen>('dashboard');
+  const [currentView, setCurrentView] = useState<ViewScreen>('landing');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Core Persistent State
@@ -254,6 +254,21 @@ export default function App() {
     setActiveTool(null);
   };
 
+  // If on landing view, render full-width immersive 11x experience
+  if (currentView === 'landing') {
+    return (
+      <LandingView
+        worker={worker}
+        onNavigate={(v) => setCurrentView(v)}
+        onRunWorker={() => {
+          setCurrentView('workspace');
+          handleRunWorker();
+        }}
+        isLiveAi={isLiveAi}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 font-sans select-none antialiased">
       {/* Left Sidebar (Desktop persistent, Mobile slide-in drawer) */}
@@ -352,18 +367,6 @@ export default function App() {
             <CreateWorkerWizard
               onWorkerCreated={handleWorkerCreated}
               onCancel={() => setCurrentView('dashboard')}
-            />
-          )}
-
-          {currentView === 'landing' && (
-            <LandingView
-              worker={worker}
-              onNavigate={(v) => setCurrentView(v)}
-              onRunWorker={() => {
-                setCurrentView('workspace');
-                handleRunWorker();
-              }}
-              isLiveAi={isLiveAi}
             />
           )}
         </main>

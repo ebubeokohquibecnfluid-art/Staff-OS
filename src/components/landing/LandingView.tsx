@@ -1,18 +1,106 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Users,
-  Search,
-  CheckSquare,
-  SlidersHorizontal,
-  FileText,
-  Building2,
-  Briefcase,
   Play,
+  Layers,
+  Sparkles,
+  Info,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Compass,
+  CheckCircle2,
+  ShieldCheck,
+  Building2,
+  Activity,
+  CheckSquare,
 } from 'lucide-react';
 import { ViewScreen, Worker } from '../../types';
+import { ElaboratedDetailsModal } from './ElaboratedDetailsModal';
+
+// High-resolution photography assets
+import autonomousCoreImg from '../../assets/images/gallery_autonomous_core_1789682277885.jpg';
+import salesResearchImg from '../../assets/images/service_sales_research_1789681967814.jpg';
+import fleetLogisticsImg from '../../assets/images/service_fleet_logistics_1789681979057.jpg';
+import transitYardImg from '../../assets/images/gallery_transit_yard_1789682291205.jpg';
+import complianceAuditImg from '../../assets/images/service_compliance_audit_1789681989445.jpg';
+import supportTriageImg from '../../assets/images/service_support_triage_1789682001928.jpg';
+import desertCanyonImg from '../../assets/images/desert_canyon_hero_1789681538333.jpg';
+
+interface GalleryItem {
+  id: string;
+  title: string;
+  category: string;
+  tagline: string;
+  image: string;
+  staff: string;
+  targetView: ViewScreen;
+  viewName: string;
+}
+
+const GALLERY_COLLECTION: GalleryItem[] = [
+  {
+    id: 'core',
+    title: 'Autonomous Workforce Core',
+    category: 'Mission Control',
+    tagline: 'Multi-agent orchestration and deterministic execution pipelines with continuous supervisory checkpoints.',
+    image: autonomousCoreImg,
+    staff: 'System Orchestrator',
+    targetView: 'dashboard',
+    viewName: 'Operations Dashboard',
+  },
+  {
+    id: 'sales-research',
+    title: 'B2B Sales & Registry Research',
+    category: 'Market Intelligence',
+    tagline: 'Autonomous registry scanning, ICP qualification, and personalized outreach drafts awaiting sign-off.',
+    image: salesResearchImg,
+    staff: 'Alex Mercer',
+    targetView: 'prospects',
+    viewName: 'Approvals Queue',
+  },
+  {
+    id: 'fleet-logistics',
+    title: 'Freight Carrier & Lane Logistics',
+    category: 'Supply Chain Operations',
+    tagline: 'Continuous carrier fleet tracking, lane capacity matching, and real-time transit bottleneck mitigation.',
+    image: fleetLogisticsImg,
+    staff: 'Jordan Hayes',
+    targetView: 'workspace',
+    viewName: 'Tasks Console',
+  },
+  {
+    id: 'transit-yard',
+    title: 'Carrier Hub Operations & Corridors',
+    category: 'Transit Infrastructure',
+    tagline: 'Regional highway corridor surveillance, terminal drayage flow, and power unit utilization metrics.',
+    image: transitYardImg,
+    staff: 'Field Logistics Agent',
+    targetView: 'workspace',
+    viewName: 'Execution Console',
+  },
+  {
+    id: 'compliance-audit',
+    title: 'DOT Filings Census & Safety Audit',
+    category: 'Governance & Compliance',
+    tagline: 'Automated DOT filings census verification, safety rating validation, and regulatory risk scoring.',
+    image: complianceAuditImg,
+    staff: 'Morgan Vance',
+    targetView: 'activity',
+    viewName: 'Audit Stream',
+  },
+  {
+    id: 'customer-ops',
+    title: 'Customer Inquiries & Exception Triage',
+    category: 'Operational Support',
+    tagline: 'Multi-channel customer inquiry triage, verified knowledge retrieval, and supervisor-gated incident resolution.',
+    image: supportTriageImg,
+    staff: 'Elena Chen',
+    targetView: 'dashboard',
+    viewName: 'Operations Console',
+  },
+];
 
 interface LandingViewProps {
   worker: Worker;
@@ -27,341 +115,425 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onRunWorker,
   isLiveAi,
 }) => {
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
+  const [isExploreMenuOpen, setIsExploreMenuOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<GalleryItem | null>(null);
+
+  // Auto-advance hero photography gently
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveHeroIndex((prev) => (prev + 1) % GALLERY_COLLECTION.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentHero = GALLERY_COLLECTION[activeHeroIndex];
+
   return (
-    <div className="w-full min-h-full bg-slate-50 text-slate-900">
-      {/* Hero Section */}
-      <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>Staff OS</span>
-          <span className="text-slate-300">|</span>
-          <span className="text-slate-500">Business Workforce Operating System</span>
-        </div>
-
-        <div className="space-y-4 max-w-3xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-            Staff that actually work.
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
-            Deploy autonomous staff members to research, analyze, qualify, and prepare business work — with complete human supervisor approval.
-          </p>
-        </div>
-
-        {/* Hero CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <span>Open Operations Dashboard</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => onNavigate('workspace')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white hover:bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200 shadow-2xs transition-colors cursor-pointer"
-          >
-            <Play className="w-3.5 h-3.5 fill-slate-800" />
-            <span>View Tasks Console</span>
-          </button>
-          <button
-            onClick={() => onNavigate('prospects')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-900 text-xs font-medium transition-colors cursor-pointer"
-          >
-            <span>Review Approvals (6) →</span>
-          </button>
-        </div>
-
-        {/* Core Principles */}
-        <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-left">
-          <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-slate-700 shrink-0" />
-            <span className="text-slate-700 font-medium">Clear assignments & objective goals</span>
+    <div className="w-full min-h-screen bg-slate-950 text-white font-sans selection:bg-white selection:text-slate-950 flex flex-col relative">
+      {/* 1. MINIMAL FLOATING HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-8 py-4 flex items-center justify-between pointer-events-none">
+        {/* Brand */}
+        <div
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="pointer-events-auto flex items-center gap-3 cursor-pointer bg-slate-950/75 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 hover:border-white/25 transition-all shadow-lg"
+        >
+          <div className="w-8 h-8 rounded-lg bg-white text-slate-950 flex items-center justify-center font-bold">
+            <Layers className="w-4 h-4" />
           </div>
-          <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-2.5">
-            <SlidersHorizontal className="w-4 h-4 text-slate-700 shrink-0" />
-            <span className="text-slate-700 font-medium">Verifiable sequential work stages</span>
-          </div>
-          <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs flex items-center gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-slate-700 shrink-0" />
-            <span className="text-slate-700 font-medium">Mandatory human sign-off before action</span>
+          <div>
+            <div className="font-bold text-sm tracking-tight text-white font-editorial leading-none">
+              Staff OS
+            </div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mt-0.5">
+              Workforce OS
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Section: Operational Model */}
-      <section id="how-it-works" className="py-14 border-t border-slate-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center space-y-1 max-w-2xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              How Staff OS Operates
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500">
-              A disciplined operating structure designed for business tasks and verifiable outcomes.
+        {/* Primary Action Buttons */}
+        <div className="pointer-events-auto flex items-center gap-2.5">
+          {/* Learn More Button */}
+          <button
+            onClick={() => setIsLearnMoreOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-white/15 text-white text-xs font-semibold shadow-lg transition-all cursor-pointer"
+          >
+            <Info className="w-3.5 h-3.5 text-slate-300" />
+            <span>Learn More</span>
+          </button>
+
+          {/* Explore Platform Button */}
+          <div className="relative">
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold shadow-lg transition-all cursor-pointer"
+            >
+              <Compass className="w-3.5 h-3.5 text-slate-950" />
+              <span>Explore Platform</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-950" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 2. FULL-SCREEN HERO PHOTOGRAPHIC CANVAS */}
+      <section className="relative w-full h-screen min-h-[600px] flex items-end justify-start overflow-hidden">
+        {/* Background Full-Screen Image with crossfade effect */}
+        {GALLERY_COLLECTION.map((item, index) => (
+          <div
+            key={item.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === activeHeroIndex ? 'opacity-100 scale-100' : 'opacity-0 pointer-events-none scale-105'
+            }`}
+          >
+            <img
+              src={item.image}
+              alt={item.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-center transform transition-transform duration-7000 ease-out scale-100 hover:scale-105"
+            />
+            {/* Cinematic dark gradients for legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
+            <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-slate-950/70" />
+          </div>
+        ))}
+
+        {/* Hero Bottom Minimal Text & Action Bar */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 pb-12 sm:pb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          {/* Minimal Typography */}
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/15 text-[11px] font-mono text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{currentHero.category.toUpperCase()}</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-300 font-sans">{currentHero.staff}</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white font-editorial leading-tight">
+              {currentHero.title}
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-300 font-light leading-relaxed max-w-xl">
+              {currentHero.tagline}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-5 rounded-lg border border-slate-200 bg-slate-50 space-y-2.5">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Step 1</div>
-              <h3 className="text-sm font-bold text-slate-900">Assign a Work Goal</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Define the business objective, industry parameters, fleet criteria, and target buyer persona.
-              </p>
+          {/* Direct Actions & Slider Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            {/* The Two Main Action Buttons */}
+            <div className="flex items-center gap-2.5">
+              {/* Explore Button */}
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="px-5 py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs sm:text-sm font-semibold shadow-xl flex items-center gap-2 transition-transform active:scale-95 cursor-pointer group"
+              >
+                <span>Explore Platform</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              {/* Learn More Button */}
+              <button
+                onClick={() => setIsLearnMoreOpen(true)}
+                className="px-4 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md border border-white/20 text-white text-xs sm:text-sm font-semibold shadow-xl flex items-center gap-2 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span>Learn More</span>
+              </button>
             </div>
 
-            <div className="p-5 rounded-lg border border-slate-200 bg-slate-50 space-y-2.5">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Step 2</div>
-              <h3 className="text-sm font-bold text-slate-900">Formulate Work Plan</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                The orchestration engine breaks down the assignment into discrete, measurable execution steps.
-              </p>
+            {/* Slide Next / Prev Controls */}
+            <div className="flex items-center gap-2 bg-slate-950/60 backdrop-blur-md p-1.5 rounded-xl border border-white/10">
+              <button
+                onClick={() =>
+                  setActiveHeroIndex(
+                    (prev) => (prev - 1 + GALLERY_COLLECTION.length) % GALLERY_COLLECTION.length
+                  )
+                }
+                className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Previous Slide"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="text-[11px] font-mono px-2 text-slate-400">
+                {String(activeHeroIndex + 1).padStart(2, '0')}/
+                {String(GALLERY_COLLECTION.length).padStart(2, '0')}
+              </div>
+              <button
+                onClick={() =>
+                  setActiveHeroIndex((prev) => (prev + 1) % GALLERY_COLLECTION.length)
+                }
+                className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Next Slide"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Slide Progress Indicator */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+          <div
+            className="h-full bg-white transition-all duration-300 ease-out"
+            style={{
+              width: `${((activeHeroIndex + 1) / GALLERY_COLLECTION.length) * 100}%`,
+            }}
+          />
+        </div>
+      </section>
+
+      {/* 3. FULL-LENGTH PICTURE GALLERY (CINEMATIC PHOTO STREAM) */}
+      <section className="w-full bg-slate-950 px-4 sm:px-8 py-16 sm:py-24 max-w-7xl mx-auto space-y-12">
+        {/* Gallery Intro with Limited Text */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-6">
+          <div className="space-y-1">
+            <div className="text-[11px] font-mono uppercase tracking-widest text-emerald-400">
+              Visual Archive
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white font-editorial tracking-tight">
+              Enterprise Photographic Gallery
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsLearnMoreOpen(true)}
+              className="text-xs font-semibold text-slate-300 hover:text-white underline underline-offset-4 cursor-pointer"
+            >
+              Learn More About Architecture
+            </button>
+            <span className="text-slate-600">•</span>
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+            >
+              <span>Explore Platform</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Picture Gallery Grid: Visual First, Limited Text */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {GALLERY_COLLECTION.map((item, index) => (
+            <div
+              key={item.id}
+              className="group relative rounded-2xl overflow-hidden border border-white/10 bg-slate-900 shadow-xl transition-all duration-300 hover:border-white/30 flex flex-col justify-end"
+            >
+              {/* Photo */}
+              <div className="relative aspect-16/10 overflow-hidden bg-slate-950">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+
+                {/* Enlarge / Lightbox Trigger */}
+                <button
+                  onClick={() => setLightboxImage(item)}
+                  className="absolute top-3 right-3 p-2 rounded-xl bg-slate-950/70 backdrop-blur-md border border-white/15 text-white/80 hover:text-white hover:bg-slate-900 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                  title="View full resolution"
+                  aria-label="Enlarge image"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+
+                {/* Minimal Top-Left Pill */}
+                <div className="absolute top-3 left-3">
+                  <span className="px-2.5 py-1 rounded-md bg-slate-950/75 backdrop-blur-md border border-white/10 text-[10px] font-mono text-emerald-400">
+                    {item.category}
+                  </span>
+                </div>
+              </div>
+
+              {/* Minimal Text Container */}
+              <div className="p-5 space-y-2 bg-slate-900/90 border-t border-white/10">
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="font-mono text-slate-500">PLATE 0{index + 1}</span>
+                  <span className="font-semibold text-slate-300">{item.staff}</span>
+                </div>
+
+                <h3 className="text-base font-bold text-white font-editorial tracking-tight">
+                  {item.title}
+                </h3>
+
+                {/* One-Liner Description */}
+                <p className="text-xs text-slate-400 font-light leading-relaxed line-clamp-2">
+                  "{item.tagline}"
+                </p>
+
+                {/* Direct Action Link into Platform */}
+                <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                  <button
+                    onClick={() => setLightboxImage(item)}
+                    className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    View Photo
+                  </button>
+
+                  <button
+                    onClick={() => onNavigate(item.targetView)}
+                    className="text-white font-semibold hover:text-emerald-400 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <span>Explore in {item.viewName}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Single Panoramic Feature Picture Slice */}
+        <div className="relative rounded-3xl overflow-hidden border border-white/15 min-h-[380px] sm:min-h-[460px] flex items-end p-6 sm:p-12 shadow-2xl">
+          <img
+            src={desertCanyonImg}
+            alt="Staff OS Autonomous Landscape"
+            referrerPolicy="no-referrer"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+
+          <div className="relative z-10 max-w-2xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-[11px] font-mono text-emerald-400">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>SUPERVISED AUTONOMY GUARANTEE</span>
             </div>
 
-            <div className="p-5 rounded-lg border border-slate-200 bg-slate-50 space-y-2.5">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Step 3</div>
-              <h3 className="text-sm font-bold text-slate-900">Autonomous Execution</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Staff collects registry records, qualifies accounts, discovers decision makers, and drafts messaging.
-              </p>
-            </div>
+            <h3 className="text-2xl sm:text-4xl font-bold text-white font-editorial tracking-tight leading-tight">
+              Be more human.
+              <br />
+              <span className="text-slate-300 font-light">Leave repetitive intelligence to Staff OS.</span>
+            </h3>
 
-            <div className="p-5 rounded-lg border border-slate-200 bg-slate-50 space-y-2.5">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Step 4</div>
-              <h3 className="text-sm font-bold text-slate-900">Human Supervisor Review</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Staff OS pauses for explicit human sign-off. Edit copy, approve targets, or reject prior to dispatch.
-              </p>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
+              Autonomous research operates continuously. Every outbound letter requires human sign-off.
+            </p>
+
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold shadow-lg flex items-center gap-2 cursor-pointer"
+              >
+                <Compass className="w-4 h-4" />
+                <span>Explore Platform Now</span>
+              </button>
+
+              <button
+                onClick={() => setIsLearnMoreOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-white/20 text-white text-xs font-semibold backdrop-blur-md flex items-center gap-2 cursor-pointer"
+              >
+                <Info className="w-4 h-4" />
+                <span>Learn More Details</span>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Section: Active Team Member (Sales Research Staff) */}
-      <section className="py-14 border-t border-slate-200 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                <Briefcase className="w-3.5 h-3.5 text-slate-600" />
-                <span>Assigned Staff Member</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                Sales Research Staff
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500">
-                Active B2B outbound research and qualification team member.
-              </p>
+      {/* 4. FOOTER */}
+      <footer className="w-full bg-slate-950 border-t border-white/10 px-4 sm:px-8 py-8 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-white text-slate-950 flex items-center justify-center font-bold text-[10px]">
+              S
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onNavigate('workspace')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-200 shadow-2xs transition-colors cursor-pointer"
-              >
-                <span>Open Tasks Console</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <span className="text-slate-300 font-semibold">Staff OS</span>
+            <span>• Full-Length Picture Gallery</span>
           </div>
 
-          {/* Interactive Staff Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-sm flex items-center justify-center shrink-0">
-                  SR
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setIsLearnMoreOpen(true)}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Learn More
+            </button>
+            <button
+              onClick={() => onNavigate('dashboard')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Explore Dashboard
+            </button>
+            <button
+              onClick={() => onNavigate('workspace')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Tasks Console
+            </button>
+            <button
+              onClick={() => onNavigate('prospects')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Approvals Queue (6)
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      {/* 5. LIGHTBOX / FULL-RESOLUTION VIEWER */}
+      {lightboxImage && (
+        <div
+          onClick={() => setLightboxImage(null)}
+          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200 cursor-zoom-out"
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+            aria-label="Close photo"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-5xl max-h-[85vh] rounded-2xl overflow-hidden border border-white/20 bg-slate-900 shadow-2xl flex flex-col"
+          >
+            <img
+              src={lightboxImage.image}
+              alt={lightboxImage.title}
+              referrerPolicy="no-referrer"
+              className="w-full max-h-[65vh] object-contain bg-black"
+            />
+            <div className="p-6 bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-white/10">
+              <div className="space-y-1">
+                <div className="text-[10px] font-mono text-emerald-400 uppercase">
+                  {lightboxImage.category} • {lightboxImage.staff}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-slate-900">Current Assignment:</span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-medium">
-                      In Progress
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-1 max-w-2xl">
-                    "{worker.goal}"
-                  </p>
-                </div>
+                <h4 className="text-xl font-bold text-white font-editorial">
+                  {lightboxImage.title}
+                </h4>
+                <p className="text-xs text-slate-400 max-w-xl">
+                  "{lightboxImage.tagline}"
+                </p>
               </div>
 
               <button
                 onClick={() => {
-                  onNavigate('workspace');
-                  onRunWorker();
+                  setLightboxImage(null);
+                  onNavigate(lightboxImage.targetView);
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>Run Assignment</span>
+                <span>Explore in {lightboxImage.viewName}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
-
-            {/* Current Work Checklist Sequence */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-slate-400">01</span>
-                <div className="font-semibold text-slate-800">Goal received</div>
-                <p className="text-[11px] text-slate-500">Criteria verified</p>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-slate-400">02</span>
-                <div className="font-semibold text-slate-800">Plan created</div>
-                <p className="text-[11px] text-slate-500">6 tasks mapped</p>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-slate-400">03</span>
-                <div className="font-semibold text-slate-800">Researched</div>
-                <p className="text-[11px] text-slate-500">32 candidates</p>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-slate-400">04</span>
-                <div className="font-semibold text-slate-800">Qualified</div>
-                <p className="text-[11px] text-slate-500">14 matching fit</p>
-              </div>
-              <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-slate-400">05</span>
-                <div className="font-semibold text-slate-800">Prepared</div>
-                <p className="text-[11px] text-slate-500">6 tailored drafts</p>
-              </div>
-              <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 text-xs space-y-1">
-                <span className="text-[10px] font-mono text-blue-700">06</span>
-                <div className="font-semibold text-blue-900">Approval</div>
-                <p className="text-[11px] text-blue-800">Human sign-off</p>
-              </div>
-            </div>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* Section: Human Governance */}
-      <section className="py-14 border-t border-slate-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="bg-slate-900 text-white rounded-xl p-6 sm:p-10 space-y-4">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
-              Operational Safety & Governance
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Work gets done. You stay in control.
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed font-normal max-w-2xl">
-              Staff OS is engineered for business operations where accountability matters. Staff performs the labor-intensive prospecting, qualification, and initial message preparation, but execution pauses at defined checkpoints for your review.
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Single-click approval workflow</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 flex items-center gap-2">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-300" />
-                <span>Full editorial review of prepared drafts</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>No messages sent without confirmation</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section: Staff Roster Overview */}
-      <section className="py-14 border-t border-slate-200 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="text-center space-y-1 max-w-2xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              Staff Roles & Operations
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Specialized staff members for business development, operational triage, and logistics.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-xs flex items-center justify-center">
-                  SR
-                </div>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  Operational
-                </span>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Sales Research Staff</h3>
-                <p className="text-xs text-slate-500 mt-0.5">B2B market discovery & outreach prep</p>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Discovers target accounts, evaluates operational fit criteria, pinpoints decision makers, and drafts personalized messages.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center">
-                  CS
-                </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                  Planned
-                </span>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-800">Support Operations Staff</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Inquiry qualification & triage</p>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Triages inbound customer questions, checks specifications and standard operating procedures, and drafts verified solutions.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center">
-                  LO
-                </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                  Planned
-                </span>
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-800">Logistics Operations Staff</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Carrier tracking & exception management</p>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Monitors transit milestones, detects delay risks, and prepares dispatcher reports for human escalation.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section: Final CTA */}
-      <section className="py-16 border-t border-slate-200 bg-white text-center">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Put Staff OS to work
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-            Assign your work goal and let Sales Research Staff manage research and qualification with complete supervisory control.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-            >
-              <span>Open Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => onNavigate('workspace')}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-medium transition-colors cursor-pointer"
-            >
-              <span>View Tasks Console</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* 6. ELABORATED DETAILS MODAL ("LEARN MORE") */}
+      <ElaboratedDetailsModal
+        isOpen={isLearnMoreOpen}
+        onClose={() => setIsLearnMoreOpen(false)}
+        worker={worker}
+        onNavigate={onNavigate}
+        onRunWorker={onRunWorker}
+      />
     </div>
   );
 };

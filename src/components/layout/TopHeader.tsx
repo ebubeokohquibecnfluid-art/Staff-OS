@@ -90,30 +90,41 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         {currentView !== 'workspace' ? (
           <button
             onClick={() => {
-              onNavigate('workspace');
-              if (!isRunning && worker.status === 'IDLE') {
-                onRunWorker();
+              if (currentView === 'landing') {
+                onNavigate('dashboard');
+              } else {
+                onNavigate('workspace');
+                if (!isRunning && worker.status === 'IDLE') {
+                  onRunWorker();
+                }
               }
             }}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
-            {isRunning ? (
+            {currentView === 'landing' ? (
+              <>
+                <span>Explore Platform</span>
+                <ArrowRight className="w-3 h-3 text-slate-400 ml-0.5" />
+              </>
+            ) : isRunning ? (
               <>
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
                 <span>Working Console</span>
+                <ArrowRight className="w-3 h-3 text-slate-400 ml-0.5" />
               </>
             ) : worker.status === 'AWAITING_APPROVAL' ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />
                 <span>Review Approvals (6)</span>
+                <ArrowRight className="w-3 h-3 text-slate-400 ml-0.5" />
               </>
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-white" />
                 <span>Run Staff Member</span>
+                <ArrowRight className="w-3 h-3 text-slate-400 ml-0.5" />
               </>
             )}
-            <ArrowRight className="w-3 h-3 text-slate-400 ml-0.5" />
           </button>
         ) : (
           <button
