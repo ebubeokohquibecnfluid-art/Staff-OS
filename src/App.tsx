@@ -39,12 +39,29 @@ export default function App() {
   });
 
   const [currentView, setCurrentView] = useState<ViewScreen>(() => {
-    const hasVisited = localStorage.getItem('staffos_has_visited') === 'true';
-    if (!hasVisited) {
-      return 'landing';
+    // Check if a specific screen was explicitly targeted via URL hash (e.g. #quickstart, #dashboard)
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '') as ViewScreen;
+      const validViews: ViewScreen[] = [
+        'landing',
+        'quickstart',
+        'dashboard',
+        'workers',
+        'workspace',
+        'tasks',
+        'approvals',
+        'prospects',
+        'results',
+        'activity',
+        'settings',
+        'create_worker',
+      ];
+      if (hash && validViews.includes(hash)) {
+        return hash;
+      }
     }
-    const savedView = localStorage.getItem('staffos_current_view') as ViewScreen | null;
-    return savedView || 'dashboard';
+    // Any visitor clicking or opening the main link starts directly on the landing page
+    return 'landing';
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -284,12 +301,43 @@ export default function App() {
     }, 400);
   };
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as ViewScreen;
+      const validViews: ViewScreen[] = [
+        'landing',
+        'quickstart',
+        'dashboard',
+        'workers',
+        'workspace',
+        'tasks',
+        'approvals',
+        'prospects',
+        'results',
+        'activity',
+        'settings',
+        'create_worker',
+      ];
+      if (hash && validViews.includes(hash)) {
+        setCurrentView(hash);
+      } else if (!hash) {
+        setCurrentView('landing');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const handleNavigate = (view: ViewScreen) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
-    if (view !== 'landing') {
-      localStorage.setItem('staffos_has_visited', 'true');
-      localStorage.setItem('staffos_current_view', view);
+    if (typeof window !== 'undefined') {
+      try {
+        const targetUrl = view === 'landing' ? window.location.pathname : `${window.location.pathname}#${view}`;
+        window.history.replaceState(null, '', targetUrl);
+      } catch {
+        // Fallback for strict sandbox environments
+      }
     }
   };
 
@@ -314,14 +362,12 @@ export default function App() {
     setRuns(SEEDED_RUNS);
     setActiveTool(null);
     setHasCompletedFirstRun(false);
-    setCurrentView('landing');
+    handleNavigate('landing');
   };
 
   const handleStartAssignmentFromQuickStart = (worker: Worker, customGoal: string) => {
     setHasCompletedFirstRun(true);
     localStorage.setItem('staffos_has_completed_first_run', 'true');
-    localStorage.setItem('staffos_has_visited', 'true');
-    localStorage.setItem('staffos_current_view', 'workspace');
 
     const updatedWorker: Worker = {
       ...worker,
@@ -334,7 +380,7 @@ export default function App() {
       prev.map((w) => (w.id === updatedWorker.id ? updatedWorker : w))
     );
     setActiveWorkerId(updatedWorker.id);
-    setCurrentView('workspace');
+    handleNavigate('workspace');
 
     setTimeout(() => {
       handleRunWorker(updatedWorker);
